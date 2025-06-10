@@ -2,41 +2,40 @@
 
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { WagmiConfig, createConfig, configureChains } from 'wagmi'
-import { polygon } from '@wagmi/core/chains'
-import { publicProvider } from 'wagmi/providers/public'
-import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import '@rainbow-me/rainbowkit/styles.css'
+
+import {
+  getDefaultConfig,
+  RainbowKitProvider
+} from '@rainbow-me/rainbowkit'
+
+import { WagmiProvider } from 'wagmi'
+import { polygon } from 'wagmi/chains'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [polygon],
-  [publicProvider()]
-)
-
-const { connectors } = getDefaultWallets({
+// حتماً projectId معتبر از WalletConnect بگیر و اینجا بذار
+const config = getDefaultConfig({
   appName: 'My NFT Airdrop',
-  projectId: 'YOUR_PROJECT_ID',
-  chains,
+  projectId: 'YOUR_PROJECT_ID', // ← این را از WalletConnect بگیر
+  chains: [polygon],
+  ssr: true,
 })
 
-const config = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient,
-  webSocketPublicClient,
-})
+const queryClient = new QueryClient()
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <WagmiConfig config={config}>
-          <RainbowKitProvider chains={chains}>
-            {children}
-          </RainbowKitProvider>
-        </WagmiConfig>
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowKitProvider>
+              {children}
+            </RainbowKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       </body>
     </html>
   )
